@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.trace-bg {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.2);
+  stroke-width: 2;
+}
+
+.trace-flow {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 10;
+  animation: flow 2s linear infinite;
+}
+
+.trace-flow.slate {
+  stroke: #64748b;
+}
+
+.trace-flow.gray {
+  stroke: #94a3b8;
+}
+
+.trace-flow.dark {
+  stroke: #475569;
+}
+
+.trace-flow.light {
+  stroke: #cbd5e1;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}

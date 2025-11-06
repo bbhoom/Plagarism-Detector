@@ -1,0 +1,8 @@
+db.sqlite3
+node_modules/
+__pycache__/
+.env
+images/
+.vscode/
+build/
+frontend/node_modules/
