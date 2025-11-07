@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ai-content-verifier
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn myproject.wsgi:application"
+    plan: free
