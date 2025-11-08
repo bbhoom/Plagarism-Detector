@@ -15,7 +15,12 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import torch
 
 # Model for semantic similarity
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = None
+def get_model():
+    global model
+    if model is None:
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+    return model
 
 class AIContentDetector:
     def __init__(self):
@@ -351,7 +356,7 @@ def compare_similarity_semantic(text1, text2):
         text2 = clean_text(str(text2))
         
         # Get embeddings
-        embeddings = model.encode([text1, text2])
+        embeddings = get_model().encode([text1, text2])
         
         # Calculate cosine similarity
         similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
