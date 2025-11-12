@@ -2,6 +2,6 @@ services:
   - type: web
     name: ai-content-verifier
     runtime: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn myproject.wsgi:application"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+    startCommand: gunicorn myproject.wsgi:application --timeout 120"
     plan: free

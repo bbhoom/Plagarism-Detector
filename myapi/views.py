@@ -25,8 +25,13 @@ def get_model():
 class AIContentDetector:
     def __init__(self):
         """Initialize models - GPT2 for perplexity, reuse your sentence transformer"""
-        self.perplexity_model = GPT2LMHeadModel.from_pretrained('gpt2')
+        # ⚡ Load GPT-2 in lightweight (float16) mode and on CPU
+        self.perplexity_model = GPT2LMHeadModel.from_pretrained(
+            'gpt2', torch_dtype=torch.float16).to('cpu')
         self.perplexity_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        # ⚡ Load a small sentence transformer model for faster startup
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
         self.perplexity_model.eval()
         
     def calculate_perplexity(self, text, max_length=512):
@@ -414,8 +419,13 @@ def clean_pdf_text(text):
     
     return text.strip()
 
-# Initialize detector globally (load model once)
-ai_detector = AIContentDetector()
+# Initialize detector globally (lazy load)
+_ai_detector = None
+def get_ai_detector():
+    global _ai_detector
+    if _ai_detector is None:
+        _ai_detector = AIContentDetector()
+    return _ai_detector
 
 @csrf_exempt
 def detect_ai(request):
@@ -430,7 +440,8 @@ def detect_ai(request):
                 return JsonResponse({'error': 'No text provided'}, status=400)
             
             # Run AI detection
-            result = ai_detector.detect_ai_content(text, detailed=detailed)
+            result = get_ai_detector().detect_ai_content(text, detailed=detailed)
+
             
             return JsonResponse(result)
             
@@ -452,7 +463,8 @@ def combined_check(request):
                 return JsonResponse({'error': 'No text provided'}, status=400)
             
             # 1. Check for AI content
-            ai_result = ai_detector.detect_ai_content(text, detailed=True)
+            ai_result = get_ai_detector().detect_ai_content(text, detailed=True)
+
             
             # 2. Check for plagiarism (existing logic)
             search_query = ' '.join(text.split()[:100])
