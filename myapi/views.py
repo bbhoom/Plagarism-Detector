@@ -27,7 +27,7 @@ class AIContentDetector:
         """Initialize models - GPT2 for perplexity, reuse your sentence transformer"""
         # ⚡ Load GPT-2 in lightweight (float16) mode and on CPU
         self.perplexity_model = GPT2LMHeadModel.from_pretrained(
-            'gpt2', torch_dtype=torch.float16).to('cpu')
+            'gpt2', dtype=torch.float16).to('cpu')
         self.perplexity_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
         # ⚡ Load a small sentence transformer model for faster startup
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
