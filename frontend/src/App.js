@@ -32,7 +32,7 @@ function App() {
 
       setUploadProgress(50);
 
-      const res = await fetch('http://127.0.0.1:8000/api/upload-pdf/', {
+      const res = await fetch('https://plag-backend-xwcn.onrender.com/api/upload-pdf/', {
         method: 'POST',
         body: formData
       });
@@ -76,7 +76,7 @@ function App() {
     }, 50);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/hello-world/', {
+      const res = await fetch('https://plag-backend-xwcn.onrender.com/api/hello-world/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
@@ -101,7 +101,7 @@ function App() {
     }, 100);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/detect-ai/', {
+      const res = await fetch('https://plag-backend-xwcn.onrender.com/api/detect-ai/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, detailed: true })
