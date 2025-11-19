@@ -4,35 +4,51 @@ from django.views.decorators.csrf import csrf_exempt
 import requests
 from bs4 import BeautifulSoup
 import json
-from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from ddgs import DDGS
 import numpy as np
 from io import BytesIO
 import pdfplumber
 import re
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-import torch
+import os
 
-# Model for semantic similarity
-model = None
-def get_model():
-    global model
-    if model is None:
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-    return model
+HF_API_KEY = os.getenv("HF_API_KEY")
+
+def hf_embeddings(text):
+    """Get sentence embeddings from Hugging Face API"""
+    try:
+        response = requests.post(
+            "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2",
+            headers={"Authorization": f"Bearer {HF_API_KEY}"},
+            json={"inputs": text}
+        )
+        return response.json()
+    except Exception as e:
+        print("HF Embedding API Error:", e)
+        return None
+
+
+def hf_perplexity(text):
+    """Calculate perplexity using GPT-2 hosted on Hugging Face"""
+    try:
+        response = requests.post(
+            "https://api-inference.huggingface.co/models/gpt2",
+            headers={"Authorization": f"Bearer {HF_API_KEY}"},
+            json={"inputs": text}
+        )
+        data = response.json()
+        if isinstance(data, list) and "generated_text" not in data:
+            # Approximation based on loss returned by API
+            loss = data[0].get("loss", None)
+            if loss:
+                return float(np.exp(loss))
+        return None
+    except Exception as e:
+        print("HF Perplexity API Error:", e)
+        return None
+
 
 class AIContentDetector:
-    def __init__(self):
-        """Initialize models - GPT2 for perplexity, reuse your sentence transformer"""
-        # ⚡ Load GPT-2 in lightweight (float16) mode and on CPU
-        self.perplexity_model = GPT2LMHeadModel.from_pretrained(
-            'gpt2', dtype=torch.float16).to('cpu')
-        self.perplexity_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        # ⚡ Load a small sentence transformer model for faster startup
-        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-
-        self.perplexity_model.eval()
         
     def calculate_perplexity(self, text, max_length=512):
         """
@@ -128,7 +144,7 @@ class AIContentDetector:
             }
         
         # 1. Calculate perplexity
-        perplexity = self.calculate_perplexity(text)
+        perplexity = hf_perplexity(text)
         
         # 2. Calculate burstiness
         burstiness = self.calculate_burstiness(text)
@@ -360,11 +376,12 @@ def compare_similarity_semantic(text1, text2):
         text1 = clean_text(str(text1))
         text2 = clean_text(str(text2))
         
-        # Get embeddings
-        embeddings = get_model().encode([text1, text2])
-        
-        # Calculate cosine similarity
-        similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+        e1 = hf_embeddings(text1)
+        e2 = hf_embeddings(text2)
+        if not e1 or not e2:
+            return 0.0
+        similarity = cosine_similarity([e1], [e2])[0][0]
+
         
         return round(float(similarity) * 100, 2)
     
